@@ -16,43 +16,85 @@ export const MULTISIG_ADDRESSES = {
   'DCAP Wallet': '0x7F40aD6ED8B9D510AF3BF31367E56CFeA3dc3d9C'
 }
 
+// Cache for wallet data
+const walletCache = new Map()
+const CACHE_TTL = 5 * 60 * 1000 // 5 minutes
+
 export async function getMultiSigBalances(provider) {
   try {
-    const balances = {}
+    const now = Date.now()
     const addresses = Object.values(MULTISIG_ADDRESSES)
-    const tokenPrices = await getTokenPrices()
-    const walletBalances = await getWalletBalances(addresses)
-    
-    for (const [name, address] of Object.entries(MULTISIG_ADDRESSES)) {
-      // Get ETH balance
-      const ethBalance = await provider.getBalance(address)
-      
-      // Create Safe contract instance
-      const safeContract = new ethers.Contract(address, SAFE_ABI, provider)
-      
-      // Get Safe details
-      const [owners, threshold] = await Promise.all([
-        safeContract.getOwners(),
-        safeContract.getThreshold()
-      ])
+    const balances = {}
 
-      // Get token balances from Dune
-      const duneBalances = walletBalances[address.toLowerCase()]?.tokens || []
-
-      balances[name] = {
-        address,
-        ethBalance: ethers.utils.formatEther(ethBalance),
-        ethPrice: tokenPrices['0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2']?.price || 0, // WETH address
-        owners,
-        threshold,
-        tokens: duneBalances
-      }
+    // Check cache first
+    const cached = walletCache.get('balances')
+    if (cached && now - cached.timestamp < CACHE_TTL) {
+      return cached.data
     }
+
+    // Get token prices and wallet balances from Dune
+    const [tokenPrices, walletBalances] = await Promise.all([
+      getTokenPrices(),
+      getWalletBalances(addresses)
+    ])
+
+    // Get on-chain data for each wallet
+    await Promise.all(
+      Object.entries(MULTISIG_ADDRESSES).map(async ([name, address]) => {
+        try {
+          // Get ETH balance
+          const ethBalance = await provider.getBalance(address)
+          
+          // Create Safe contract instance
+          const safeContract = new ethers.Contract(address, SAFE_ABI, provider)
+          
+          // Get Safe details
+          const [owners, threshold] = await Promise.all([
+            safeContract.getOwners(),
+            safeContract.getThreshold()
+          ])
+
+          // Get token balances from Dune
+          const duneBalances = walletBalances[address.toLowerCase()]?.tokens || []
+
+          balances[name] = {
+            address,
+            ethBalance: ethers.utils.formatEther(ethBalance),
+            ethPrice: tokenPrices['0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2']?.price || 0,
+            owners,
+            threshold,
+            tokens: duneBalances,
+            lastUpdated: new Date().toISOString()
+          }
+        } catch (error) {
+          // If there's an error, use cached data for this wallet if available
+          if (cached?.data?.[name]) {
+            balances[name] = cached.data[name]
+          } else {
+            balances[name] = {
+              address,
+              error: error.message,
+              lastUpdated: new Date().toISOString()
+            }
+          }
+        }
+      })
+    )
+
+    // Update cache
+    walletCache.set('balances', {
+      data: balances,
+      timestamp: now
+    })
 
     return balances
   } catch (error) {
-    console.error('Failed to fetch multi-sig balances:', error)
-    return null
+    // Return cached data if available
+    const cached = walletCache.get('balances')
+    if (cached) {
+      return cached.data
+    }
+    throw error
   }
 }
 
