@@ -11,7 +11,7 @@ KingDAO.io
 - Community Integrations: Discord announcements feed, Snapshot voting overview
 
 
-
+Stack
 - Frontend: Next.js, React.js, Tailwind CSS
 
 - Blockchain: Ethers.js, Solidity (for any custom contracts)
