@@ -9,10 +9,10 @@ const SAFE_ABI = [
 ]
 
 // Known multi-sig addresses
-const MULTISIG_ADDRESSES = {
-  'DAO Fund': '0xde27cbE0DdfaDF1C8C27fC8e43f7e713DD1B23cF', // Replace with actual treasury multi-sig address
-  'Reward Wallet': '0x24901F1b9b41e853778107CD737cC426b456fC95', // Replace with actual investment multi-sig address
-  'IBW': '0x00239b99703b773B0A1B6A33f4691867aF071d5A', // Replace with actual operations multi-sig address
+export const MULTISIG_ADDRESSES = {
+  'DAO Fund': '0xde27cbE0DdfaDF1C8C27fC8e43f7e713DD1B23cF',
+  'Reward Wallet': '0x24901F1b9b41e853778107CD737cC426b456fC95',
+  'IBW': '0x00239b99703b773B0A1B6A33f4691867aF071d5A',
   'DCAP Wallet': '0x7F40aD6ED8B9D510AF3BF31367E56CFeA3dc3d9C'
 }
 
