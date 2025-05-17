@@ -1,16 +1,23 @@
-import WalletButton from './WalletButton'
+// components/Layout.js
+
+import WalletButton from './WalletButton'  // The connect/disconnect UI
 
 export default function Layout({ children }) {
   return (
     <>
-      <header style={{ padding: '1rem', borderBottom: '1px solid #eee' }}>
-        <h1>KingDAO</h1>
+      {/* Header with site title and wallet button */}
+      <header className="flex items-center justify-between p-4 bg-bg">
+        <h1 className="text-xl font-bold text-primary">KingDAO</h1>
         <WalletButton />
       </header>
-      <main style={{ padding: '1rem' }}>
+
+      {/* Main content injected from pages */}
+      <main className="p-4 bg-bg text-fg">
         {children}
       </main>
-      <footer style={{ padding: '1rem', borderTop: '1px solid #eee', textAlign: 'center' }}>
+
+      {/* Footer */}
+      <footer className="p-4 bg-bg text-center text-sm text-fg/75">
         © {new Date().getFullYear()} KingDAO
       </footer>
     </>
