@@ -1,7 +1,21 @@
 import { useState, useEffect } from 'react'
-import { getRecentTrades } from '../services/tradeService'
+import { getRecentSales } from '../services/priceService'
 import { formatDistance } from 'date-fns'
 import { ethers } from 'ethers'
+
+// Helper function to safely format timestamp
+function formatTimestamp(timestamp) {
+  try {
+    if (!timestamp) return 'Unknown time'
+    const date = new Date(timestamp)
+    // Check if date is valid
+    if (isNaN(date.getTime())) return 'Invalid date'
+    return formatDistance(date, new Date(), { addSuffix: true })
+  } catch (err) {
+    console.error('Error formatting timestamp:', err)
+    return 'Invalid date'
+  }
+}
 
 export default function RecentTrades() {
   const [trades, setTrades] = useState([])
@@ -12,11 +26,23 @@ export default function RecentTrades() {
     const loadTrades = async () => {
       setIsLoading(true)
       try {
-        const recentTrades = await getRecentTrades()
+        const recentTrades = await getRecentSales()
         if (recentTrades.length === 0) {
           console.log('No Kong trades found in recent transactions')
         }
-        setTrades(recentTrades)
+        // Filter out trades with invalid timestamps and older than 3 months
+        const threeMonthsAgo = new Date()
+        threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3)
+        
+        const validTrades = recentTrades.filter(trade => {
+          try {
+            const date = new Date(trade.timestamp)
+            return !isNaN(date.getTime()) && date >= threeMonthsAgo
+          } catch {
+            return false
+          }
+        }).slice(0, 5) // Limit to 5 trades
+        setTrades(validTrades)
       } catch (err) {
         setError('Failed to load recent trades')
         console.error(err)
@@ -57,13 +83,13 @@ export default function RecentTrades() {
             <div className="flex justify-between items-center">
               <div>
                 <span className="font-medium">
-                  {Number(ethers.utils.formatEther(trade.price)).toFixed(4)} ETH
+                  {Number(trade.price).toFixed(4)} {trade.currency}
                 </span>
                 <div className="text-sm text-gray-500">
-                  Token ID: #{trade.tokenIds?.[0]}
+                  Token ID: #{trade.tokenId}
                 </div>
                 <div className="text-xs text-gray-400">
-                  Via {trade.protocol}
+                  Via {trade.marketplace}
                 </div>
               </div>
               <div className="flex gap-2">
@@ -75,15 +101,10 @@ export default function RecentTrades() {
                 >
                   Tx
                 </a>
-                <a 
-                  href={trade.tokenURIs?.[0]}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-500 hover:text-blue-600"
-                >
-                  Metadata
-                </a>
               </div>
+            </div>
+            <div className="text-xs text-gray-400 mt-1">
+              {formatTimestamp(trade.timestamp)}
             </div>
           </div>
         ))}

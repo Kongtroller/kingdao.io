@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import { getKongFloorPrice, getHistoricalPrices } from '../services/priceService'
 import { Line } from 'react-chartjs-2'
 import {
   Chart as ChartJS,
@@ -27,32 +26,48 @@ ChartJS.register(
 export default function PortfolioStats({ nftCount }) {
   const [floorPrice, setFloorPrice] = useState(0)
   const [portfolioValue, setPortfolioValue] = useState(0)
+  const [multisigValue, setMultisigValue] = useState(0)
+  const [tokenPrices, setTokenPrices] = useState({})
   const [historicalPrices, setHistoricalPrices] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [lastUpdated, setLastUpdated] = useState(null)
 
   useEffect(() => {
     async function loadStats() {
       setIsLoading(true)
       try {
-        const [price, history] = await Promise.all([
-          getKongFloorPrice(),
-          getHistoricalPrices()
-        ])
-        console.log('Received floor price:', price)
-        console.log('Received price history:', history)
+        const response = await fetch('/api/dune-data')
+        const result = await response.json()
 
-        if (price === 0 && history.length > 0) {
-          // If current price is unavailable, use latest historical price
-          const latestPrice = history[history.length - 1].price
-          setFloorPrice(latestPrice)
-          setPortfolioValue(latestPrice * nftCount)
-        } else {
-          setFloorPrice(price)
-          setPortfolioValue(price * nftCount)
+        if (result.error) {
+          console.warn('API Warning:', result.error)
         }
-        
-        setHistoricalPrices(history)
+
+        const { kong, wallet, tokens, history } = result.data
+
+        // Update floor price and portfolio value
+        if (kong?.floorPrice) {
+          setFloorPrice(kong.floorPrice)
+          setPortfolioValue(kong.floorPrice * nftCount)
+        }
+
+        // Update multisig value
+        if (wallet?.value) {
+          setMultisigValue(wallet.value)
+        }
+
+        // Update token prices
+        if (tokens?.prices) {
+          setTokenPrices(tokens.prices)
+        }
+
+        // Update historical prices
+        if (history) {
+          setHistoricalPrices(history)
+        }
+
+        setLastUpdated(new Date(result.timestamp))
       } catch (err) {
         console.error('Error loading stats:', err)
         setError(err.message)
@@ -60,11 +75,15 @@ export default function PortfolioStats({ nftCount }) {
         setIsLoading(false)
       }
     }
+
     loadStats()
+    // Refresh data every minute
+    const interval = setInterval(loadStats, 60 * 1000)
+    return () => clearInterval(interval)
   }, [nftCount])
 
   const chartData = {
-    labels: historicalPrices.map(p => p.date),
+    labels: historicalPrices.map(p => new Date(p.timestamp).toLocaleDateString()),
     datasets: [
       {
         label: 'Floor Price (ETH)',
@@ -75,17 +94,6 @@ export default function PortfolioStats({ nftCount }) {
         tension: 0.4,
         pointRadius: 2,
         pointHoverRadius: 5
-      },
-      {
-        label: 'Trading Volume (USD)',
-        data: historicalPrices.map(p => p.volume),
-        borderColor: 'rgb(153, 102, 255)',
-        backgroundColor: 'rgba(153, 102, 255, 0.1)',
-        fill: true,
-        tension: 0.4,
-        pointRadius: 2,
-        pointHoverRadius: 5,
-        yAxisID: 'y1'
       }
     ]
   }
@@ -102,17 +110,13 @@ export default function PortfolioStats({ nftCount }) {
       },
       title: {
         display: true,
-        text: 'Price & Volume History'
+        text: 'Price History'
       },
       tooltip: {
         callbacks: {
           label: function(context) {
             const value = context.raw
-            const datasetLabel = context.dataset.label
-            if (datasetLabel.includes('Volume')) {
-              return `${datasetLabel}: $${value.toLocaleString()}`
-            }
-            return `${datasetLabel}: ${value.toFixed(4)} ETH`
+            return `Floor Price: ${value.toFixed(4)} ETH`
           }
         }
       }
@@ -129,21 +133,6 @@ export default function PortfolioStats({ nftCount }) {
         ticks: {
           callback: value => `${value.toFixed(4)} ETH`
         }
-      },
-      y1: {
-        type: 'linear',
-        display: true,
-        position: 'right',
-        title: {
-          display: true,
-          text: 'Volume (USD)'
-        },
-        ticks: {
-          callback: value => `$${value.toLocaleString()}`
-        },
-        grid: {
-          drawOnChartArea: false
-        }
       }
     }
   }
@@ -151,7 +140,11 @@ export default function PortfolioStats({ nftCount }) {
   if (isLoading) {
     return (
       <div className="space-y-6">
-        <div className="grid gap-6 md:grid-cols-2">
+        <div className="grid gap-6 md:grid-cols-3">
+          <div className="bg-white p-4 rounded-lg shadow animate-pulse">
+            <div className="h-6 bg-gray-200 rounded w-1/2 mb-4"></div>
+            <div className="h-8 bg-gray-200 rounded w-3/4"></div>
+          </div>
           <div className="bg-white p-4 rounded-lg shadow animate-pulse">
             <div className="h-6 bg-gray-200 rounded w-1/2 mb-4"></div>
             <div className="h-8 bg-gray-200 rounded w-3/4"></div>
@@ -169,27 +162,48 @@ export default function PortfolioStats({ nftCount }) {
   }
 
   if (error) {
-    return <div className="text-red-500">Error loading price data: {error}</div>
+    return <div className="text-red-500">Error loading data: {error}</div>
   }
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-6 md:grid-cols-3">
         <div className="bg-white p-4 rounded-lg shadow">
           <h3 className="text-lg font-semibold mb-2">Floor Price</h3>
           <p className="text-3xl font-bold">{floorPrice.toFixed(4)} ETH</p>
           <p className="text-sm text-gray-500 mt-1">
-            ${(floorPrice * 2000).toLocaleString()} USD
+            Last updated: {lastUpdated?.toLocaleTimeString()}
           </p>
         </div>
         <div className="bg-white p-4 rounded-lg shadow">
           <h3 className="text-lg font-semibold mb-2">Portfolio Value</h3>
           <p className="text-3xl font-bold">{portfolioValue.toFixed(4)} ETH</p>
           <p className="text-sm text-gray-500 mt-1">
-            ${(portfolioValue * 2000).toLocaleString()} USD
+            {nftCount} Kong NFTs
+          </p>
+        </div>
+        <div className="bg-white p-4 rounded-lg shadow">
+          <h3 className="text-lg font-semibold mb-2">Treasury Value</h3>
+          <p className="text-3xl font-bold">{multisigValue.toFixed(4)} ETH</p>
+          <p className="text-sm text-gray-500 mt-1">
+            Multisig Balance
           </p>
         </div>
       </div>
+      
+      {Object.keys(tokenPrices).length > 0 && (
+        <div className="bg-white p-4 rounded-lg shadow">
+          <h3 className="text-lg font-semibold mb-4">Token Prices</h3>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {Object.entries(tokenPrices).map(([token, price]) => (
+              <div key={token} className="p-3 bg-gray-50 rounded">
+                <h4 className="font-medium">{token}</h4>
+                <p className="text-xl">${Number(price).toFixed(2)}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
       
       <div className="bg-white p-4 rounded-lg shadow">
         {historicalPrices.length > 0 ? (

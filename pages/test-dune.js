@@ -112,21 +112,33 @@ export default function TestDune() {
         <h3 className="font-semibold mb-2">Environment Variables Status</h3>
         <ul className="list-disc list-inside space-y-1">
           <li>
-            Floor Price API:{' '}
-            <span className={process.env.DUNE_NFT_FLOOR_PRICE_API ? 'text-green-600' : 'text-red-600'}>
-              {process.env.DUNE_NFT_FLOOR_PRICE_API ? '✅ Set' : '❌ Missing'}
+            Dune API Key:{' '}
+            <span className={process.env.DUNE_API_KEY ? 'text-green-600' : 'text-red-600'}>
+              {process.env.DUNE_API_KEY ? '✅ Set' : '❌ Missing'}
             </span>
           </li>
           <li>
-            Token Prices API:{' '}
-            <span className={process.env.DUNE_NFT_TOKEN_PRICES_API ? 'text-green-600' : 'text-red-600'}>
-              {process.env.DUNE_NFT_TOKEN_PRICES_API ? '✅ Set' : '❌ Missing'}
+            Floor Price Query:{' '}
+            <span className={process.env.DUNE_FLOOR_PRICE_QUERY_ID ? 'text-green-600' : 'text-red-600'}>
+              {process.env.DUNE_FLOOR_PRICE_QUERY_ID ? '✅ Set' : '❌ Missing'}
             </span>
           </li>
           <li>
-            Wallet Balances API:{' '}
-            <span className={process.env.DUNE_WALLET_BALANCES_API ? 'text-green-600' : 'text-red-600'}>
-              {process.env.DUNE_WALLET_BALANCES_API ? '✅ Set' : '❌ Missing'}
+            Recent Sales Query:{' '}
+            <span className={process.env.DUNE_RECENT_SALES_QUERY_ID ? 'text-green-600' : 'text-red-600'}>
+              {process.env.DUNE_RECENT_SALES_QUERY_ID ? '✅ Set' : '❌ Missing'}
+            </span>
+          </li>
+          <li>
+            Wallet Balances Query:{' '}
+            <span className={process.env.DUNE_WALLET_BALANCES_QUERY_ID ? 'text-green-600' : 'text-red-600'}>
+              {process.env.DUNE_WALLET_BALANCES_QUERY_ID ? '✅ Set' : '❌ Missing'}
+            </span>
+          </li>
+          <li>
+            Historical Prices Query:{' '}
+            <span className={process.env.DUNE_HISTORICAL_PRICES_QUERY_ID ? 'text-green-600' : 'text-red-600'}>
+              {process.env.DUNE_HISTORICAL_PRICES_QUERY_ID ? '✅ Set' : '❌ Missing'}
             </span>
           </li>
         </ul>

@@ -1,5 +1,5 @@
 import { ethers } from 'ethers'
-import { getTokenPrices, getWalletBalances } from './duneService'
+import { getTokenPrices, getWalletBalances } from './priceService'
 
 // Gnosis Safe ABI (minimal for balance checking)
 const SAFE_ABI = [
@@ -32,10 +32,10 @@ export async function getMultiSigBalances(provider) {
       return cached.data
     }
 
-    // Get token prices and wallet balances from Dune
-    const [tokenPrices, walletBalances] = await Promise.all([
+    // Get token prices and wallet balances
+    const [tokenPrices, walletBalance] = await Promise.all([
       getTokenPrices(),
-      getWalletBalances(addresses)
+      getWalletBalances()
     ])
 
     // Get on-chain data for each wallet
@@ -54,16 +54,12 @@ export async function getMultiSigBalances(provider) {
             safeContract.getThreshold()
           ])
 
-          // Get token balances from Dune
-          const duneBalances = walletBalances[address.toLowerCase()]?.tokens || []
-
           balances[name] = {
             address,
             ethBalance: ethers.utils.formatEther(ethBalance),
-            ethPrice: tokenPrices['0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2']?.price || 0,
+            totalValue: walletBalance,
             owners,
             threshold,
-            tokens: duneBalances,
             lastUpdated: new Date().toISOString()
           }
         } catch (error) {
