@@ -1,5 +1,5 @@
 import { ethers } from 'ethers'
-import { getNFTFloorPrices } from './duneService'
+import { getKongFloorPrice } from './priceService'
 
 const NFT_COLLECTIONS = {
   // Add your NFT collections here
@@ -13,13 +13,18 @@ const NFT_COLLECTIONS = {
     name: 'Sportsbots',
     abi: ['function balanceOf(address) view returns (uint256)']
   },
+  Kong: {
+    address: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS,
+    name: 'Kong',
+    abi: ['function balanceOf(address) view returns (uint256)']
+  },
   // Add more collections as needed
 }
 
 export async function getNFTPortfolioData(walletAddresses, provider) {
   try {
     const portfolioData = {}
-    const floorPrices = await getNFTFloorPrices()
+    const floorPrice = await getKongFloorPrice()
 
     for (const [collectionId, collection] of Object.entries(NFT_COLLECTIONS)) {
       const contract = new ethers.Contract(collection.address, collection.abi, provider)
@@ -41,14 +46,13 @@ export async function getNFTPortfolioData(walletAddresses, provider) {
       }
 
       if (holdings.length > 0) {
-        const floorData = floorPrices[collection.address.toLowerCase()]
         portfolioData[collectionId] = {
           name: collection.name,
           address: collection.address,
           holdings,
-          floorPrice: floorData?.floorPrice || 0,
-          lastUpdate: floorData?.lastUpdate,
-          totalValue: holdings.reduce((sum, h) => sum + (h.balance * (floorData?.floorPrice || 0)), 0)
+          floorPrice: floorPrice,
+          lastUpdate: new Date().toISOString(),
+          totalValue: holdings.reduce((sum, h) => sum + (h.balance * floorPrice), 0)
         }
       }
     }

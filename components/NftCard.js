@@ -58,9 +58,10 @@ export default function NftCard({ nft }) {
             <Image
               src={metadata.image.replace('ipfs://', 'https://ipfs.io/ipfs/')}
               alt={`Kong #${nft.id}`}
-              layout="fill"
-              objectFit="cover"
-              className="rounded"
+              fill
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              className="rounded object-cover"
+              priority={nft.id <= 3}
             />
           </div>
         )}
