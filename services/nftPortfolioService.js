@@ -1,4 +1,5 @@
 import { ethers } from 'ethers'
+import { getNFTFloorPrices } from './duneService'
 
 const NFT_COLLECTIONS = {
   // Add your NFT collections here
@@ -18,6 +19,7 @@ const NFT_COLLECTIONS = {
 export async function getNFTPortfolioData(walletAddresses, provider) {
   try {
     const portfolioData = {}
+    const floorPrices = await getNFTFloorPrices()
 
     for (const [collectionId, collection] of Object.entries(NFT_COLLECTIONS)) {
       const contract = new ethers.Contract(collection.address, collection.abi, provider)
@@ -39,10 +41,14 @@ export async function getNFTPortfolioData(walletAddresses, provider) {
       }
 
       if (holdings.length > 0) {
+        const floorData = floorPrices[collection.address.toLowerCase()]
         portfolioData[collectionId] = {
           name: collection.name,
           address: collection.address,
-          holdings
+          holdings,
+          floorPrice: floorData?.floorPrice || 0,
+          lastUpdate: floorData?.lastUpdate,
+          totalValue: holdings.reduce((sum, h) => sum + (h.balance * (floorData?.floorPrice || 0)), 0)
         }
       }
     }

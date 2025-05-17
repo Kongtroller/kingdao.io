@@ -1,4 +1,5 @@
 import { ethers } from 'ethers'
+import { getTokenPrices, getWalletBalances } from './duneService'
 
 // Gnosis Safe ABI (minimal for balance checking)
 const SAFE_ABI = [
@@ -18,6 +19,9 @@ const MULTISIG_ADDRESSES = {
 export async function getMultiSigBalances(provider) {
   try {
     const balances = {}
+    const addresses = Object.values(MULTISIG_ADDRESSES)
+    const tokenPrices = await getTokenPrices()
+    const walletBalances = await getWalletBalances(addresses)
     
     for (const [name, address] of Object.entries(MULTISIG_ADDRESSES)) {
       // Get ETH balance
@@ -32,12 +36,16 @@ export async function getMultiSigBalances(provider) {
         safeContract.getThreshold()
       ])
 
+      // Get token balances from Dune
+      const duneBalances = walletBalances[address.toLowerCase()]?.tokens || []
+
       balances[name] = {
         address,
         ethBalance: ethers.utils.formatEther(ethBalance),
+        ethPrice: tokenPrices['0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2']?.price || 0, // WETH address
         owners,
         threshold,
-        tokens: [] // Will be populated with ERC20 balances
+        tokens: duneBalances
       }
     }
 
@@ -48,41 +56,4 @@ export async function getMultiSigBalances(provider) {
   }
 }
 
-// Function to get ERC20 token balances
-export async function getTokenBalances(address, provider) {
-  const ERC20_ABI = [
-    'function balanceOf(address) view returns (uint256)',
-    'function decimals() view returns (uint8)',
-    'function symbol() view returns (string)'
-  ]
-
-  const TOKEN_ADDRESSES = {
-    USDC: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
-    USDT: '0xdAC17F958D2ee523a2206206994597C13D831ec7',
-    // Add other tokens as needed
-  }
-
-  try {
-    const balances = []
-    
-    for (const [symbol, tokenAddress] of Object.entries(TOKEN_ADDRESSES)) {
-      const tokenContract = new ethers.Contract(tokenAddress, ERC20_ABI, provider)
-      
-      const [balance, decimals] = await Promise.all([
-        tokenContract.balanceOf(address),
-        tokenContract.decimals()
-      ])
-
-      balances.push({
-        symbol,
-        balance: ethers.utils.formatUnits(balance, decimals),
-        address: tokenAddress
-      })
-    }
-
-    return balances
-  } catch (error) {
-    console.error('Failed to fetch token balances:', error)
-    return []
-  }
-} 
+// Function to get ERC20 token balances is no longer needed as we're using Dune data 

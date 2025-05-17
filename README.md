@@ -1,3 +1,63 @@
+# KingDAO Treasury Dashboard
+
+A comprehensive dashboard for managing DAO treasury assets, including multi-sig wallets, token balances, and NFT holdings.
+
+## Environment Variables
+
+Create a `.env` file in the root directory with the following variables:
+
+```env
+# Web3 Configuration
+NEXT_PUBLIC_RPC_URL=https://mainnet.infura.io/v3/your-project-id
+NEXT_PUBLIC_CONTRACT_ADDRESS=0x...
+
+# Dune Analytics Configuration
+DUNE_API_KEY=your-dune-api-key
+DUNE_TOKEN_PRICES_QUERY_ID=your-token-prices-query-id
+DUNE_NFT_FLOOR_PRICES_QUERY_ID=your-nft-floor-prices-query-id
+DUNE_WALLET_BALANCES_QUERY_ID=your-wallet-balances-query-id
+
+# Google Sheets Configuration
+GOOGLE_CLIENT_EMAIL=your-service-account-email
+GOOGLE_PRIVATE_KEY=your-service-account-private-key
+TREASURY_SPREADSHEET_ID=your-spreadsheet-id
+```
+
+## Features
+
+- Multi-sig wallet integration with Gnosis Safe
+- Real-time token prices and balances from Dune Analytics
+- NFT portfolio tracking with floor prices
+- Treasury data integration with Google Sheets
+- Interactive dashboard with filtering and sorting capabilities
+
+## Getting Started
+
+1. Clone the repository
+2. Install dependencies: `npm install`
+3. Set up environment variables as described above
+4. Run the development server: `npm run dev`
+
+## Dune Analytics Setup
+
+1. Create the following queries in Dune Analytics:
+   - Token Prices Query: Get current prices for ERC20 tokens
+   - NFT Floor Prices Query: Get floor prices for NFT collections
+   - Wallet Balances Query: Get token balances for specified wallets
+2. Copy the query IDs and add them to your environment variables
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch: `git checkout -b feature/amazing-feature`
+3. Commit your changes: `git commit -m 'feat: add amazing feature'`
+4. Push to the branch: `git push origin feature/amazing-feature`
+5. Open a pull request
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
 KingDAO.io
 
 - Landing Page with wallet connect
