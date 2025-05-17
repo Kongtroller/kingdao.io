@@ -1,25 +1,31 @@
 // components/Layout.js
 
-import WalletButton from './WalletButton'  // The connect/disconnect UI
+import { useWeb3React } from '@web3-react/core'
 
 export default function Layout({ children }) {
+  const { account, deactivate } = useWeb3React()
+
   return (
-    <>
-      {/* Header with site title and wallet button */}
-      <header className="flex items-center justify-between p-4 bg-bg">
-        <h1 className="text-xl font-bold text-primary">KingDAO</h1>
-        <WalletButton />
-      </header>
-
-      {/* Main content injected from pages */}
-      <main className="p-4 bg-bg text-fg">
-        {children}
-      </main>
-
-      {/* Footer */}
-      <footer className="p-4 bg-bg text-center text-sm text-fg/75">
-        © {new Date().getFullYear()} KingDAO
-      </footer>
-    </>
+    <div className="min-h-screen bg-gray-100">
+      <nav className="bg-white shadow-sm">
+        <div className="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
+          <h1 className="text-xl font-bold">KingDAO</h1>
+          {account ? (
+            <div className="flex items-center gap-4">
+              <span className="text-sm">
+                {account.slice(0, 6)}...{account.slice(-4)}
+              </span>
+              <button
+                onClick={deactivate}
+                className="px-4 py-2 bg-red-500 text-white rounded"
+              >
+                Disconnect
+              </button>
+            </div>
+          ) : null}
+        </div>
+      </nav>
+      <main>{children}</main>
+    </div>
   )
 }
