@@ -12,8 +12,12 @@ const nextConfig = {
       'ipfs.io', 
       'raw.githubusercontent.com',
       'gateway.ipfs.io',
-      'gateway.pinata.cloud'
-    ]
+      'gateway.pinata.cloud',
+      'cloudflare-ipfs.com',
+      'ipfs.infura.io'
+    ],
+    dangerouslyAllowSVG: true,
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   }
 }
 
