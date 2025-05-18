@@ -74,7 +74,7 @@ export default function Navbar() {
             <li><a href="#faq" className="text-gray-700 hover:text-primary dark:text-gray-300 dark:hover:text-sky-400 font-medium transition-colors">FAQ</a></li>
             <li>
                 <a href="/dashboard" className="text-gray-700 hover:text-primary dark:text-gray-300 dark:hover:text-sky-400 font-medium transition-colors border rounded-full border-primary dark:border-sky-400 px-4 py-2">
-                    Open Dashboard
+                    Dashboard
                 </a>
             </li>
           </ul>
@@ -145,7 +145,7 @@ export default function Navbar() {
               <ul className="mt-12 space-y-4">
                   {/* <li><a href="#description" className="block text-gray-800 hover:text-primary dark:text-gray-200 dark:hover:text-sky-400 text-lg font-medium">Features</a></li> */}
                   <li><a href="#faq" className="block text-gray-800 hover:text-primary dark:text-gray-200 dark:hover:text-sky-400 text-lg font-medium">FAQ</a></li>
-                  <li><a href="/dashboard" className="block text-gray-800 hover:text-primary dark:text-gray-200 dark:hover:text-sky-400 text-lg font-medium">Open App</a></li>
+                  <li><a href="/dashboard" className="block text-gray-800 hover:text-primary dark:text-gray-200 dark:hover:text-sky-400 text-lg font-medium">Dashboard</a></li>
               </ul>
 
             </motion.div>
