@@ -59,7 +59,7 @@ export default function TestDune() {
   )
 
   return (
-    <div className="p-4 space-y-8">
+    <div className="p-6 py-16 sm:py-24 max-w-6xl mx-auto space-y-8">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">King DAO Dune Analytics Data</h1>
         <div className="text-sm text-gray-600">
