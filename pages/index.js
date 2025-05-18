@@ -1,24 +1,20 @@
-import WalletButton from '../components/WalletButton'
-import { useWeb3React } from '@web3-react/core'
+// pages/index.js
+// REMOVE: import Navbar from '@/containers/NavBar'; // Remove this import
+import HeroSection from '@/containers/Hero';
+// REMOVE: import Footer from '@/containers/Footer';    // Remove this import
 
 export default function Home() {
-  const { account } = useWeb3React()
-
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-4 bg-bg">
-      <h1 className="text-4xl font-bold mb-4 text-primary">Welcome to KingDAO</h1>
-      <p className="mb-8 text-lg text-fg/75">
-        A minimalistic, futuristic Web3 dashboard for Kong NFT holders.
-      </p>
-      <WalletButton />
-      {account && (
-        <a 
-          href="/dashboard" 
-          className="mt-4 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-        >
-          Go to Dashboard
-        </a>
-      )}
+    // Remove the flex-col min-h-screen px-0 mx-0 overflow-x-hidden here.
+    // _app.js is handling the overall structure and min-height.
+    // Keeping overflow-x-hidden might be necessary if you have other horizontal overflow issues,
+    // but try removing it first to see if the layout behaves normally.
+    <div className=""> {/* Use a simple wrapper div, or potentially remove this div if HeroSection is top-level */}
+      {/* REMOVE: <Navbar/> */}
+      {/* The <main className="flex-grow"> is handled by _app.js */}
+      {/* The page content goes directly here */}
+      <HeroSection/>
+      {/* REMOVE: <Footer /> */}
     </div>
   )
 }

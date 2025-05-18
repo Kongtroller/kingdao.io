@@ -1,27 +1,21 @@
-// pages/_app.js
-
-import '../styles/globals.css'                  // Global CSS (Tailwind + custom resets)
-import { Web3ReactProvider } from '@web3-react/core'  
-import { ethers } from 'ethers'                 
-import Layout from '../components/Layout'       
-
-// Fix the getLibrary function
-function getLibrary(provider) {
-  // Return null if no provider is passed (prevents SSR issues)
-  if (!provider) return null
-  return new ethers.providers.Web3Provider(provider, 'any')
-}
+import '../styles/globals.css'
+import { Providers } from '../components/providers'
+import { Toaster } from "@/components/ui/sonner"
+import Navbar from "@/containers/NavBar"
+import Footer from "@/containers/Footer"
 
 function MyApp({ Component, pageProps }) {
   return (
-    // Web3ReactProvider makes the Web3 context available to all children
-    <Web3ReactProvider getLibrary={getLibrary}>
-      {/* Layout wraps every page with header/footer */}
-      <Layout>
-        {/* page-level component (index.js, dashboard.js, etc.) */}
-        <Component {...pageProps} />
-      </Layout>
-    </Web3ReactProvider>
+    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-gray-950">
+      <Providers>
+        <Navbar />
+        <main className="flex-grow">
+          <Component {...pageProps} />
+        </main>
+        <Footer />
+        <Toaster position="bottom-right" />
+      </Providers>
+    </div>
   )
 }
 
