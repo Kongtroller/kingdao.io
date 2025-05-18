@@ -77,6 +77,11 @@ export default function Navbar() {
                     Dashboard
                 </a>
             </li>
+            <li>
+                <a href="/proposals" className="text-gray-700 hover:text-primary dark:text-gray-300 dark:hover:text-sky-400 font-medium transition-colors border rounded-full border-primary dark:border-sky-400 px-4 py-2">
+                    Proposals
+                </a>
+            </li>
           </ul>
 
           {/* Right Section: Wallet Button & Mobile Toggle */}
