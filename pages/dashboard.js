@@ -1,13 +1,17 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 import { ethers } from 'ethers'
+import { useTheme } from 'next-themes'
 import NftCard from '../components/NftCard'
 import NftSkeleton from '../components/NftSkeleton'
 import ErrorBoundary from '../components/ErrorBoundary'
 import { useWeb3Init } from '../hooks/useWeb3Init'
 import PortfolioStats from '../components/PortfolioStats'
 import RecentTrades from '../components/RecentTrades'
+import TreasuryDashboard from '../components/TreasuryDashboard'
+import HistoricalPriceChart from '../components/HistoricalPriceChart'
 import config from '@/config/config'
+import { Sun, Moon } from 'lucide-react'
 
 import {
   useAccount,
@@ -18,6 +22,7 @@ import {
 const ITEMS_PER_PAGE = 6
 
 export default function Dashboard() {
+  const { theme, setTheme } = useTheme()
   const { address: account, isConnected } = useAccount()
   const { data: walletClient } = useWalletClient()
   const publicClient = usePublicClient()
@@ -31,6 +36,7 @@ export default function Dashboard() {
   const [currentPage, setCurrentPage] = useState(1)
   const [isAuthorized, setIsAuthorized] = useState(false)
   const [checkingAuth, setCheckingAuth] = useState(true)
+  const [activeTab, setActiveTab] = useState('personal')
 
   // Pagination
   const totalPages = Math.ceil((nfts || []).length / ITEMS_PER_PAGE)
@@ -165,57 +171,111 @@ export default function Dashboard() {
 
   return (
     <ErrorBoundary>
-      <div className="p-6 py-16 sm:py-24 max-w-6xl mx-auto">
-        <div className="grid gap-6">
-          <PortfolioStats nftCount={nfts.length} />
-          <RecentTrades />
-          <div className="grid gap-6 md:grid-cols-2">
-            {/* Portfolio Summary */}
-            <div className="bg-white p-6 rounded-lg shadow">
-              <h2 className="text-xl font-bold mb-4">Portfolio Summary</h2>
-              {isLoading ? (
-                <div className="animate-pulse">
-                  <div className="h-6 bg-gray-200 rounded w-3/4 mb-4"></div>
-                  <div className="h-6 bg-gray-200 rounded w-1/2"></div>
+      <div className="p-6 py-16 sm:py-24 max-w-7xl mx-auto">
+        {/* Theme Toggle and Tabs */}
+        <div className="flex justify-between items-center mb-8">
+          <div className="flex space-x-4">
+            <button
+              onClick={() => setActiveTab('personal')}
+              className={`px-4 py-2 rounded-lg transition-colors ${
+                activeTab === 'personal'
+                ? 'bg-primary text-white'
+                : 'bg-gray-100 dark:bg-gray-800'
+              }`}
+            >
+              Personal Dashboard
+            </button>
+            <button
+              onClick={() => setActiveTab('dao')}
+              className={`px-4 py-2 rounded-lg transition-colors ${
+                activeTab === 'dao'
+                ? 'bg-primary text-white'
+                : 'bg-gray-100 dark:bg-gray-800'
+              }`}
+            >
+              DAO Dashboard
+            </button>
+          </div>
+          <button
+            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+            className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800"
+          >
+            {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+          </button>
+        </div>
+
+        {activeTab === 'personal' ? (
+          <div className="grid gap-6">
+            {/* Main Content Area */}
+            <div className="grid grid-cols-3 gap-6">
+              {/* Left Column - Portfolio Stats */}
+              <div className="col-span-2">
+                <PortfolioStats nftCount={nfts.length} />
+                
+                {/* Historical Price Chart */}
+                <div className="mt-6 bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+                  <h2 className="text-xl font-bold mb-4">Historical Price Data</h2>
+                  <HistoricalPriceChart />
                 </div>
-              ) : (
-                <>
-                  <p className="text-lg">ETH Balance: {ethBalance} ETH</p>
-                  <p className="text-lg">Kong NFTs: {nfts?.length || 0}</p>
-                </>
-              )}
+              </div>
+
+              {/* Right Column - Recent Sales */}
+              <div className="col-span-1">
+                <RecentTrades />
+              </div>
             </div>
 
-            {/* NFT Gallery */}
-            <div className="bg-white p-6 rounded-lg shadow">
-              <h2 className="text-xl font-bold mb-4">Your Kong NFTs</h2>
-              <div className="grid gap-4 grid-cols-2">
+            {/* Portfolio Details */}
+            <div className="grid gap-6 md:grid-cols-2">
+              {/* Portfolio Summary */}
+              <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+                <h2 className="text-xl font-bold mb-4">Portfolio Summary</h2>
                 {isLoading ? (
-                  Array(4).fill(0).map((_, i) => <NftSkeleton key={i} />)
+                  <div className="animate-pulse">
+                    <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-4"></div>
+                    <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
+                  </div>
                 ) : (
-                  paginatedNfts.map(nft => <NftCard key={nft.id} nft={nft} />)
+                  <>
+                    <p className="text-lg">ETH Balance: {ethBalance} ETH</p>
+                    <p className="text-lg">Kong NFTs: {nfts?.length || 0}</p>
+                  </>
                 )}
               </div>
-              {totalPages > 1 && (
-                <div className="mt-4 flex justify-center gap-2">
-                  {Array(totalPages).fill(0).map((_, i) => (
-                    <button
-                      key={i}
-                      onClick={() => setCurrentPage(i + 1)}
-                      className={`px-3 py-1 rounded ${
-                        currentPage === i + 1
-                          ? 'bg-blue-500 text-white'
-                          : 'bg-gray-200'
-                      }`}
-                    >
-                      {i + 1}
-                    </button>
-                  ))}
+
+              {/* NFT Gallery */}
+              <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+                <h2 className="text-xl font-bold mb-4">Your Kong NFTs</h2>
+                <div className="grid gap-4 grid-cols-2">
+                  {isLoading ? (
+                    Array(4).fill(0).map((_, i) => <NftSkeleton key={i} />)
+                  ) : (
+                    paginatedNfts.map(nft => <NftCard key={nft.id} nft={nft} />)
+                  )}
                 </div>
-              )}
+                {totalPages > 1 && (
+                  <div className="mt-4 flex justify-center gap-2">
+                    {Array(totalPages).fill(0).map((_, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setCurrentPage(i + 1)}
+                        className={`px-3 py-1 rounded ${
+                          currentPage === i + 1
+                            ? 'bg-blue-500 text-white'
+                            : 'bg-gray-200'
+                        }`}
+                      >
+                        {i + 1}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
-        </div>
+        ) : (
+          <TreasuryDashboard />
+        )}
       </div>
     </ErrorBoundary>
   )

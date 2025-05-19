@@ -1,0 +1,27 @@
+{
+  "investments": [
+    {
+      "date": "2024-01-01",
+      "asset": "ETH",
+      "amount": 10.5,
+      "value": 25000,
+      "notes": "Initial investment"
+    }
+  ],
+  "expenses": [
+    {
+      "date": "2024-01-15",
+      "category": "Development",
+      "amount": 5000,
+      "description": "Smart contract audit"
+    }
+  ],
+  "revenue": [
+    {
+      "date": "2024-01-30",
+      "source": "NFT Sales",
+      "amount": 15000,
+      "notes": "First collection launch"
+    }
+  ]
+} 

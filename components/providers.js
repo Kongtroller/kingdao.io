@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { WagmiProvider } from 'wagmi';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ThemeProvider } from 'next-themes';
 
 import { createAppKit } from '@reown/appkit/react';
 import { WagmiAdapter } from '@reown/appkit-adapter-wagmi';
@@ -65,10 +66,12 @@ export function Providers({ children }) {
   if (!wagmiConfig) return <div>Configuration Error</div>;
 
   return (
-    <WagmiProvider config={wagmiConfig} reconnectOnMount={true}>
-      <QueryClientProvider client={queryClient}>
-        {mounted ? children : null}
-      </QueryClientProvider>
-    </WagmiProvider>
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+      <WagmiProvider config={wagmiConfig} reconnectOnMount={true}>
+        <QueryClientProvider client={queryClient}>
+          {mounted ? children : null}
+        </QueryClientProvider>
+      </WagmiProvider>
+    </ThemeProvider>
   );
 }

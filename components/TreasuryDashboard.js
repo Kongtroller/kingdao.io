@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useWeb3React } from '@web3-react/core'
 import { getMultiSigBalances, getTokenBalances } from '../services/walletService'
-import { getTreasuryData } from '../services/spreadsheetService'
 import { getNFTPortfolioData } from '../services/nftPortfolioService'
 import TreasuryChart from './TreasuryChart'
 import { formatCurrency, formatAddress } from '../utils/format'
@@ -47,14 +46,13 @@ export default function TreasuryDashboard() {
       setError(null)
 
       try {
-        // Fetch all data in parallel
-        const [
-          multiSigBalances,
-          treasurySheetData,
-          nftData
-        ] = await Promise.all([
+        // Fetch treasury data from API
+        const treasuryResponse = await fetch('/api/treasury')
+        const treasurySheetData = await treasuryResponse.json()
+
+        // Fetch other data in parallel
+        const [multiSigBalances, nftData] = await Promise.all([
           getMultiSigBalances(library),
-          getTreasuryData(),
           getNFTPortfolioData(Object.values(multiSigBalances || {}).map(w => w.address), library)
         ])
 
