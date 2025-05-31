@@ -23,7 +23,7 @@ ChartJS.register(
   Filler
 )
 
-export default function PortfolioStats({ nftCount }) {
+export default function PortfolioStats({ ethBalance, nfts }) {
   const [floorPrice, setFloorPrice] = useState(0)
   const [portfolioValue, setPortfolioValue] = useState(0)
   const [multisigValue, setMultisigValue] = useState(0)
@@ -38,36 +38,34 @@ export default function PortfolioStats({ nftCount }) {
       setIsLoading(true)
       try {
         const response = await fetch('/api/dune-data')
-        const result = await response.json()
+        const { data, timestamp } = await response.json()
 
-        if (result.error) {
-          console.warn('API Warning:', result.error)
+        if (!data) {
+          throw new Error('No data received from API')
         }
 
-        const { kong, wallet, tokens, history } = result.data
-
         // Update floor price and portfolio value
-        if (kong?.floorPrice) {
-          setFloorPrice(kong.floorPrice)
-          setPortfolioValue(kong.floorPrice * nftCount)
+        if (data.kong?.floorPrice) {
+          setFloorPrice(data.kong.floorPrice)
+          setPortfolioValue(data.kong.floorPrice * (nfts?.length || 0))
         }
 
         // Update multisig value
-        if (wallet?.value) {
-          setMultisigValue(wallet.value)
+        if (data.wallet?.value) {
+          setMultisigValue(data.wallet.value)
         }
 
         // Update token prices
-        if (tokens?.prices) {
-          setTokenPrices(tokens.prices)
+        if (data.tokens?.prices) {
+          setTokenPrices(data.tokens.prices)
         }
 
         // Update historical prices
-        if (history) {
-          setHistoricalPrices(history)
+        if (data.history) {
+          setHistoricalPrices(data.history)
         }
 
-        setLastUpdated(new Date(result.timestamp))
+        setLastUpdated(new Date(timestamp))
       } catch (err) {
         console.error('Error loading stats:', err)
         setError(err.message)
@@ -80,7 +78,7 @@ export default function PortfolioStats({ nftCount }) {
     // Refresh data every minute
     const interval = setInterval(loadStats, 60 * 1000)
     return () => clearInterval(interval)
-  }, [nftCount])
+  }, [nfts])
 
   const chartData = {
     labels: historicalPrices.map(p => new Date(p.timestamp).toLocaleDateString()),
@@ -141,21 +139,21 @@ export default function PortfolioStats({ nftCount }) {
     return (
       <div className="space-y-6">
         <div className="grid gap-6 md:grid-cols-3">
-          <div className="bg-white p-4 rounded-lg shadow animate-pulse">
-            <div className="h-6 bg-gray-200 rounded w-1/2 mb-4"></div>
-            <div className="h-8 bg-gray-200 rounded w-3/4"></div>
+          <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow animate-pulse">
+            <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-1/2 mb-4"></div>
+            <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
           </div>
-          <div className="bg-white p-4 rounded-lg shadow animate-pulse">
-            <div className="h-6 bg-gray-200 rounded w-1/2 mb-4"></div>
-            <div className="h-8 bg-gray-200 rounded w-3/4"></div>
+          <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow animate-pulse">
+            <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-1/2 mb-4"></div>
+            <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
           </div>
-          <div className="bg-white p-4 rounded-lg shadow animate-pulse">
-            <div className="h-6 bg-gray-200 rounded w-1/2 mb-4"></div>
-            <div className="h-8 bg-gray-200 rounded w-3/4"></div>
+          <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow animate-pulse">
+            <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-1/2 mb-4"></div>
+            <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
           </div>
         </div>
-        <div className="bg-white p-4 rounded-lg shadow animate-pulse">
-          <div className="h-64 bg-gray-200 rounded"></div>
+        <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow animate-pulse">
+          <div className="h-64 bg-gray-200 dark:bg-gray-700 rounded"></div>
         </div>
       </div>
     )
@@ -168,35 +166,35 @@ export default function PortfolioStats({ nftCount }) {
   return (
     <div className="space-y-6">
       <div className="grid gap-6 md:grid-cols-3">
-        <div className="bg-white p-4 rounded-lg shadow">
+        <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
           <h3 className="text-lg font-semibold mb-2">Floor Price</h3>
           <p className="text-3xl font-bold">{floorPrice.toFixed(4)} ETH</p>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
             Last updated: {lastUpdated?.toLocaleTimeString()}
           </p>
         </div>
-        <div className="bg-white p-4 rounded-lg shadow">
+        <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
           <h3 className="text-lg font-semibold mb-2">Portfolio Value</h3>
           <p className="text-3xl font-bold">{portfolioValue.toFixed(4)} ETH</p>
-          <p className="text-sm text-gray-500 mt-1">
-            {nftCount} Kong NFTs
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+            {nfts?.length || 0} Kong NFTs
           </p>
         </div>
-        <div className="bg-white p-4 rounded-lg shadow">
+        <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
           <h3 className="text-lg font-semibold mb-2">Treasury Value</h3>
           <p className="text-3xl font-bold">{multisigValue.toFixed(4)} ETH</p>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
             Multisig Balance
           </p>
         </div>
       </div>
       
       {Object.keys(tokenPrices).length > 0 && (
-        <div className="bg-white p-4 rounded-lg shadow">
+        <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
           <h3 className="text-lg font-semibold mb-4">Token Prices</h3>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {Object.entries(tokenPrices).map(([token, price]) => (
-              <div key={token} className="p-3 bg-gray-50 rounded">
+              <div key={token} className="p-3 bg-gray-50 dark:bg-gray-700 rounded">
                 <h4 className="font-medium">{token}</h4>
                 <p className="text-xl">${Number(price).toFixed(2)}</p>
               </div>
@@ -205,11 +203,11 @@ export default function PortfolioStats({ nftCount }) {
         </div>
       )}
       
-      <div className="bg-white p-4 rounded-lg shadow">
+      <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
         {historicalPrices.length > 0 ? (
           <Line data={chartData} options={chartOptions} />
         ) : (
-          <div className="text-center py-8 text-gray-500">
+          <div className="text-center py-8 text-gray-500 dark:text-gray-400">
             No historical price data available
           </div>
         )}

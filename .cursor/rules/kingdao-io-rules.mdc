@@ -1,0 +1,12 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+* **Do Not Touch Existing Components**: Every new component/hook stands alone under `/components/personal` or `/components/dao`. They rely on shared utility functions in `/lib` but never modify existing files.
+* **API Keys & Security**: If you want to hide `ALCHEMY_KEY` from the client, wrap all Alchemy calls inside Next.js API routes (e.g. `/pages/api/floorPrice.ts`). Then have your React Query hooks call `/api/floorPrice?contract=0xKING`. Otherwise, you can safely use `NEXT_PUBLIC_ALCHEMY_KEY` on the client if you don’t mind it being public.
+* **Responsiveness**: All layouts assume a mobile-first approach. The grid system and flex containers should gracefully collapse.
+* **Styling Consistency**: Use Tailwind utility classes consistently. If there’s a design system (e.g. a custom `<Card>` or `<Button>` component), wrap your raw `<div>`s in those instead.
+* **Future Loan Integration**: The `LoanPlaceholder` already reserves screen real estate. When you’re ready to build “Loan against your NFT,” simply replace `<LoanPlaceholder />` with the real loan flow.
+
+* **Charts**: You can reuse a common Chart wrapper if you already have one. Otherwise, create a small file in `/components/common/ChartContainer.tsx` that renders `<div className="w-full h-64"><Line {...} /></div>` to enforce a consistent aspect ratio.
