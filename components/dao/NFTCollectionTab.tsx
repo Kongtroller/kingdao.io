@@ -3,6 +3,7 @@ import Image from 'next/image'
 import { COLLECTIONS } from '../../lib/daoCollections'
 import { useDaoCollectionDetails } from '../../hooks/useDaoCollectionDetails'
 import { formatCurrency } from '../../utils/format'
+import { ExternalLink } from 'lucide-react'
 
 export default function NFTCollectionTab() {
   const [selectedCollection, setSelectedCollection] = useState<string | null>(null)
@@ -18,27 +19,65 @@ export default function NFTCollectionTab() {
               selectedCollection === collection.contract ? null : collection.contract
             )}
             className={`
-              p-4 rounded-lg border transition-all
+              relative overflow-hidden rounded-lg border transition-all
               ${selectedCollection === collection.contract
                 ? 'border-primary bg-primary/5'
                 : 'border-border hover:border-primary/50'
               }
             `}
           >
-            <div className="flex items-center gap-3">
-              <div className="relative w-12 h-12">
-                <Image
-                  src={collection.logo}
-                  alt={collection.name}
-                  fill
-                  className="object-contain"
-                />
-              </div>
-              <div className="text-left">
-                <h3 className="font-semibold">{collection.name}</h3>
-                <p className="text-sm text-muted-foreground">
-                  {collection.description}
-                </p>
+            {/* Banner Image */}
+            <div className="relative w-full h-32">
+              <Image
+                src={collection.banner}
+                alt={`${collection.name} banner`}
+                fill
+                className="object-cover"
+                priority
+                onError={(e) => {
+                  // Fallback to a default banner image
+                  e.currentTarget.src = '/images/placeholder-banner.jpg'
+                }}
+              />
+            </div>
+
+            {/* Content */}
+            <div className="p-4">
+              <div className="flex items-center gap-3">
+                {/* Logo */}
+                <div className="relative w-12 h-12 rounded-full overflow-hidden bg-background">
+                  <Image
+                    src={collection.logo}
+                    alt={collection.name}
+                    fill
+                    className="object-contain"
+                    priority
+                    onError={(e) => {
+                      // Fallback to a default logo image
+                      e.currentTarget.src = '/images/placeholder-logo.jpg'
+                    }}
+                  />
+                </div>
+                
+                <div className="flex-1 text-left">
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-semibold">{collection.name}</h3>
+                    {collection.website && (
+                      <a 
+                        href={collection.website}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-muted-foreground hover:text-primary"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <ExternalLink className="h-4 w-4" />
+                      </a>
+                    )}
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    {collection.description}
+                  </p>
+                </div>
               </div>
             </div>
           </button>
@@ -77,12 +116,13 @@ export default function NFTCollectionTab() {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <h4 className="font-medium">Holdings</h4>
+              {/* Holdings */}
+              <div>
+                <h4 className="font-medium mb-4">Holdings</h4>
                 {details.holdings.map((holding, i) => (
                   <div
                     key={i}
-                    className="flex justify-between items-center p-3 bg-background rounded-lg"
+                    className="flex justify-between items-center p-3 bg-background rounded-lg mb-2"
                   >
                     <div className="text-sm">{holding.wallet}</div>
                     <div className="font-medium">{holding.balance} NFTs</div>

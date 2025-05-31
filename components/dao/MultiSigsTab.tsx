@@ -86,15 +86,53 @@ function WalletCard({ name, wallet, details, onClick }) {
 }
 
 export function MultiSigDetailView({ name, address, onClose }) {
-  const { data: details, isLoading } = useMultiSigDetails(address)
+  const { data: details, isLoading, error } = useMultiSigDetails(address)
 
-  if (isLoading || !details) {
+  if (isLoading) {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
         <div className="bg-white dark:bg-gray-800 p-6 rounded-lg w-full max-w-2xl mx-4">
           <div className="animate-pulse space-y-4">
             <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/3" />
             <div className="h-64 bg-gray-200 dark:bg-gray-700 rounded" />
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (error || details?.error) {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg w-full max-w-2xl mx-4">
+          <div className="text-center">
+            <h3 className="text-lg font-medium mb-2">Error Loading Details</h3>
+            <p className="text-red-500">{error?.message || details?.error || 'Failed to load wallet details'}</p>
+            <button
+              onClick={onClose}
+              className="mt-4 px-4 py-2 bg-primary text-white rounded hover:bg-primary/90"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (!details) {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg w-full max-w-2xl mx-4">
+          <div className="text-center">
+            <h3 className="text-lg font-medium mb-2">No Data Available</h3>
+            <p>Could not load wallet details at this time.</p>
+            <button
+              onClick={onClose}
+              className="mt-4 px-4 py-2 bg-primary text-white rounded hover:bg-primary/90"
+            >
+              Close
+            </button>
           </div>
         </div>
       </div>

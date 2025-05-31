@@ -1,7 +1,6 @@
 // Maximum number of retries for API calls
 const MAX_RETRIES = 3
 const RETRY_DELAY = 1000 // 1 second
-const COINGECKO_PROXY = 'https://api.coingecko.com/api/v3'
 
 // Sleep function for delay between retries
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
@@ -10,7 +9,6 @@ interface FetchWithRetryOptions {
   retries?: number
   delayMs?: number
   headers?: Record<string, string>
-  mode?: RequestMode
 }
 
 export async function fetchWithRetry<T>(
@@ -21,29 +19,14 @@ export async function fetchWithRetry<T>(
     retries = MAX_RETRIES,
     delayMs = RETRY_DELAY,
     headers = {
-      'Accept': 'application/json',
-      'User-Agent': 'Mozilla/5.0'
-    },
-    mode = 'cors'
+      'Accept': 'application/json'
+    }
   } = options
 
   for (let i = 0; i < retries; i++) {
     try {
-      const response = await fetch(url, { 
-        headers,
-        mode,
-        credentials: 'omit'
-      })
+      const response = await fetch(url, { headers })
       
-      // Handle rate limiting
-      if (response.status === 429) {
-        console.warn('Rate limited by CoinGecko, retrying...')
-        const retryAfter = response.headers.get('Retry-After')
-        const delay = retryAfter ? parseInt(retryAfter) * 1000 : delayMs * Math.pow(2, i)
-        await sleep(delay)
-        continue
-      }
-
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)
       }
@@ -70,15 +53,8 @@ export async function fetchCoinGeckoPrice(
   tokenAddress: string
 ): Promise<number> {
   try {
-    const data = await fetchWithRetry<Record<string, { usd: number }>>(
-      `${COINGECKO_PROXY}/simple/token_price/ethereum?contract_addresses=${tokenAddress}&vs_currencies=usd`,
-      {
-        mode: 'cors',
-        headers: {
-          'Accept': 'application/json',
-          'User-Agent': 'Mozilla/5.0'
-        }
-      }
+    const data = await fetchWithRetry<{ price: number }>(
+      `/api/prices?type=token&address=${tokenAddress}`
     )
 
     if (!data) {
@@ -86,7 +62,7 @@ export async function fetchCoinGeckoPrice(
       return 0
     }
 
-    return data[tokenAddress.toLowerCase()]?.usd || 0
+    return data.price
   } catch (error) {
     console.error(`Failed to fetch price for token ${tokenAddress}:`, error)
     return 0
@@ -95,15 +71,8 @@ export async function fetchCoinGeckoPrice(
 
 export async function fetchEthPrice(): Promise<number> {
   try {
-    const data = await fetchWithRetry<{ ethereum: { usd: number } }>(
-      `${COINGECKO_PROXY}/simple/price?ids=ethereum&vs_currencies=usd`,
-      {
-        mode: 'cors',
-        headers: {
-          'Accept': 'application/json',
-          'User-Agent': 'Mozilla/5.0'
-        }
-      }
+    const data = await fetchWithRetry<{ price: number }>(
+      `/api/prices?type=eth`
     )
 
     if (!data) {
@@ -111,7 +80,7 @@ export async function fetchEthPrice(): Promise<number> {
       return 0
     }
 
-    return data.ethereum?.usd || 0
+    return data.price
   } catch (error) {
     console.error('Failed to fetch ETH price:', error)
     return 0

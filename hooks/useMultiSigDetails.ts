@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { Alchemy, Network, OwnedNft, NftTokenType, FloorPriceMarketplace } from 'alchemy-sdk'
+import { Alchemy, Network } from 'alchemy-sdk'
 import { getProvider } from '../lib/web3/provider'
 import { ethers } from 'ethers'
 import { isLikelyScamToken } from '../lib/constants/scamTokens'
@@ -32,6 +32,7 @@ interface MultiSigDetails {
   tokenBalances: TokenBalance[]
   nftList: NFTBalance[]
   totalUSDValue: number
+  error?: string
 }
 
 // Minimum USD value to show a token (e.g., $1)
@@ -44,7 +45,7 @@ async function fetchMultiSigDetails(address: string): Promise<MultiSigDetails> {
     const ethBalance = await alchemy.core.getBalance(address)
     const formattedEthBalance = ethers.utils.formatEther(ethBalance)
     
-    // Get ETH price from Coingecko with retries and fallback
+    // Get ETH price with retries and fallback
     const ethPrice = await fetchEthPrice()
     const ethValue = parseFloat(formattedEthBalance) * ethPrice
 
@@ -93,7 +94,7 @@ async function fetchMultiSigDetails(address: string): Promise<MultiSigDetails> {
             return null
           }
 
-          // Get USD price from Coingecko with fallback
+          // Get USD price from our proxy API
           const usdPrice = await fetchCoinGeckoPrice(balance.contractAddress)
           const usdValue = numericBalance * usdPrice
 
@@ -148,21 +149,9 @@ async function fetchMultiSigDetails(address: string): Promise<MultiSigDetails> {
     })
 
     // Wait for all promises with error handling
-    const tokenResults = await Promise.all(
-      tokenBalancePromises.map(p => p.catch(() => null))
-    )
-
-    // Filter out null results and add to existing token balances
-    tokenBalances = [
-      ...tokenBalances,
-      ...tokenResults.filter((token): token is TokenBalance => token !== null)
-    ]
-
-    // Sort tokens by USD value
-    tokenBalances.sort((a, b) => b.usdValue - a.usdValue)
-
-    const nftList = await Promise.all(
-      nftPromises.map(p => p.catch(error => {
+    const [tokenResults, nftList] = await Promise.all([
+      Promise.all(tokenBalancePromises.map(p => p.catch(() => null))),
+      Promise.all(nftPromises.map(p => p.catch(error => {
         console.error('Error in NFT promise:', error)
         return {
           contractAddress: '',
@@ -174,12 +163,21 @@ async function fetchMultiSigDetails(address: string): Promise<MultiSigDetails> {
           floorPrice: 0,
           collectionName: 'Error'
         }
-      }))
-    )
+      })))
+    ])
+
+    // Filter out null results and add to existing token balances
+    tokenBalances = [
+      ...tokenBalances,
+      ...tokenResults.filter((token): token is TokenBalance => token !== null)
+    ]
+
+    // Sort tokens by USD value
+    tokenBalances.sort((a, b) => b.usdValue - a.usdValue)
 
     // Calculate total USD value
     const tokenValue = tokenBalances.reduce((sum, token) => sum + token.usdValue, 0)
-    const nftValue = nftList.reduce((sum, nft) => sum + nft.floorPrice, 0)
+    const nftValue = nftList.reduce((sum, nft) => sum + (nft.floorPrice * ethPrice), 0)
     const totalValue = tokenValue + nftValue
 
     console.log('Fetched details for address:', address, {
@@ -195,11 +193,11 @@ async function fetchMultiSigDetails(address: string): Promise<MultiSigDetails> {
     }
   } catch (error) {
     console.error('Error fetching details for address:', address, error)
-    // Return a safe fallback value instead of throwing
     return {
       tokenBalances: [],
       nftList: [],
-      totalUSDValue: 0
+      totalUSDValue: 0,
+      error: error instanceof Error ? error.message : 'Unknown error occurred'
     }
   }
 }
@@ -209,7 +207,8 @@ export function useMultiSigDetails(address: string) {
     queryKey: ['multiSig', address],
     queryFn: () => fetchMultiSigDetails(address),
     staleTime: 5 * 60 * 1000, // 5 minutes
-    refetchOnWindowFocus: false
+    refetchOnWindowFocus: false,
+    retry: 3
   })
 }
 
@@ -224,6 +223,7 @@ export function useAllMultiSigDetails(addresses: string[]) {
       return details
     },
     staleTime: 5 * 60 * 1000,
-    refetchOnWindowFocus: false
+    refetchOnWindowFocus: false,
+    retry: 3
   })
 } 
