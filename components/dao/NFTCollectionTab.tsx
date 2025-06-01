@@ -1,13 +1,20 @@
 import { useState } from 'react'
 import Image from 'next/image'
+import { useRouter } from 'next/router'
 import { COLLECTIONS } from '../../lib/daoCollections'
 import { useDaoCollectionDetails } from '../../hooks/useDaoCollectionDetails'
 import { formatCurrency } from '../../utils/format'
 import { ExternalLink } from 'lucide-react'
 
 export default function NFTCollectionTab() {
+  const router = useRouter()
   const [selectedCollection, setSelectedCollection] = useState<string | null>(null)
   const details = useDaoCollectionDetails(selectedCollection || '')
+
+  const handleCollectionClick = (collection: typeof COLLECTIONS[number]) => {
+    // Navigate to the dedicated collection page
+    router.push(`/collections/${collection.name.toLowerCase().replace(/\s+/g, '-')}`)
+  }
 
   return (
     <div className="space-y-6">
@@ -15,16 +22,8 @@ export default function NFTCollectionTab() {
         {COLLECTIONS.map((collection) => (
           <button
             key={collection.contract}
-            onClick={() => setSelectedCollection(
-              selectedCollection === collection.contract ? null : collection.contract
-            )}
-            className={`
-              relative overflow-hidden rounded-lg border transition-all
-              ${selectedCollection === collection.contract
-                ? 'border-primary bg-primary/5'
-                : 'border-border hover:border-primary/50'
-              }
-            `}
+            onClick={() => handleCollectionClick(collection)}
+            className="relative overflow-hidden rounded-lg border transition-all border-border hover:border-primary/50"
           >
             {/* Banner Image */}
             <div className="relative w-full h-32">
@@ -96,7 +95,8 @@ export default function NFTCollectionTab() {
               {details.error}
             </div>
           ) : (
-            <div className="bg-card rounded-lg p-6 space-y-4">
+            <div className="bg-card rounded-lg p-6 space-y-6">
+              {/* Stats */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="p-4 bg-background rounded-lg">
                   <div className="text-sm text-muted-foreground">Total NFTs</div>
@@ -116,9 +116,73 @@ export default function NFTCollectionTab() {
                 </div>
               </div>
 
+              {/* NFT Showcase */}
+              <div>
+                <h4 className="font-medium mb-4">NFT Showcase</h4>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                  {details.holdings.map(holding => (
+                    holding.nfts.map(nft => (
+                      <div
+                        key={`${holding.wallet}-${nft.tokenId}`}
+                        className="bg-background rounded-lg overflow-hidden"
+                      >
+                        {/* NFT Image */}
+                        <div className="relative aspect-square">
+                          {nft.imageUrl ? (
+                            <Image
+                              src={nft.imageUrl}
+                              alt={nft.name}
+                              fill
+                              className="object-cover"
+                              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-muted flex items-center justify-center">
+                              <span className="text-muted-foreground">No Image</span>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* NFT Details */}
+                        <div className="p-3">
+                          <h5 className="font-medium truncate" title={nft.name}>
+                            {nft.name}
+                          </h5>
+                          <p className="text-sm text-muted-foreground truncate">
+                            Token ID: {nft.tokenId}
+                          </p>
+                        </div>
+
+                        {/* Traits Preview */}
+                        {nft.traits && nft.traits.length > 0 && (
+                          <div className="px-3 pb-3">
+                            <div className="flex flex-wrap gap-1">
+                              {nft.traits.slice(0, 3).map((trait, i) => (
+                                <span
+                                  key={i}
+                                  className="text-xs bg-primary/10 text-primary rounded px-1.5 py-0.5"
+                                  title={`${trait.trait_type}: ${trait.value}`}
+                                >
+                                  {trait.value}
+                                </span>
+                              ))}
+                              {nft.traits.length > 3 && (
+                                <span className="text-xs text-muted-foreground">
+                                  +{nft.traits.length - 3} more
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ))
+                  ))}
+                </div>
+              </div>
+
               {/* Holdings */}
               <div>
-                <h4 className="font-medium mb-4">Holdings</h4>
+                <h4 className="font-medium mb-4">Holdings by Wallet</h4>
                 {details.holdings.map((holding, i) => (
                   <div
                     key={i}

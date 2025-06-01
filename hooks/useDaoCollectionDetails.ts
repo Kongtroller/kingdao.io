@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { usePublicClient } from 'wagmi';
 import { ethers } from 'ethers';
 import { getDaoWalletAddresses } from '../lib/daoWallets';
-import { getNFTPortfolioData } from '../services/nftPortfolioService';
+import { getNFTPortfolioData, NFT } from '../services/nftPortfolioService';
 
 interface NFTCollection {
   name: string;
@@ -22,6 +22,7 @@ export interface CollectionDetails {
   holdings: Array<{
     wallet: string;
     balance: number;
+    nfts: NFT[];
   }>;
   isLoading: boolean;
   error: string | null;
@@ -46,13 +47,13 @@ export function useDaoCollectionDetails(contractAddress: string) {
         const provider = new ethers.providers.Web3Provider(publicClient as any);
         const walletAddresses = getDaoWalletAddresses();
         
-        // Use existing NFT portfolio service
+        // Use NFT portfolio service
         const portfolioData = await getNFTPortfolioData(walletAddresses, provider);
         
         // Find the collection data
         const collectionData = Object.values(portfolioData).find(
-          (collection: NFTCollection) => collection.address.toLowerCase() === contractAddress.toLowerCase()
-        ) as NFTCollection | undefined;
+          collection => collection.address.toLowerCase() === contractAddress.toLowerCase()
+        );
 
         if (collectionData) {
           const totalNfts = collectionData.holdings.reduce(
@@ -85,7 +86,10 @@ export function useDaoCollectionDetails(contractAddress: string) {
       }
     };
 
-    fetchDetails();
+    if (contractAddress) {
+      setDetails(prev => ({ ...prev, isLoading: true, error: null }));
+      fetchDetails();
+    }
   }, [publicClient, contractAddress]);
 
   return details;
