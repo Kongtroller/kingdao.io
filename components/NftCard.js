@@ -27,6 +27,14 @@ export default function NftCard({ nft }) {
 
   useEffect(() => {
     const fetchWithFallback = async (uri) => {
+      // If the URI ends with an image extension, it's a direct image URL
+      if (/\.(jpg|jpeg|png|gif|webp)$/i.test(uri)) {
+        return {
+          image: uri,
+          attributes: []
+        }
+      }
+
       let lastError = null
       
       // If it's not an IPFS URI, try direct fetch
@@ -36,6 +44,13 @@ export default function NftCard({ nft }) {
           if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`)
           return await res.json()
         } catch (err) {
+          // If JSON parsing fails, assume it's a direct image URL
+          if (err.name === 'SyntaxError') {
+            return {
+              image: uri,
+              attributes: []
+            }
+          }
           throw new Error(`Failed to fetch from HTTP URL: ${err.message}`)
         }
       }
@@ -59,10 +74,19 @@ export default function NftCard({ nft }) {
     const loadMetadata = async () => {
       setIsLoading(true)
       try {
-        const data = await fetchWithFallback(nft.uri)
-        setMetadata(data)
-        if (data.image) {
-          setImageUrl(getImageUrl(data.image))
+        // If nft.uri is a direct image URL, create a simple metadata object
+        if (/\.(jpg|jpeg|png|gif|webp)$/i.test(nft.uri)) {
+          setMetadata({
+            image: nft.uri,
+            attributes: []
+          })
+          setImageUrl(nft.uri)
+        } else {
+          const data = await fetchWithFallback(nft.uri)
+          setMetadata(data)
+          if (data.image) {
+            setImageUrl(getImageUrl(data.image))
+          }
         }
       } catch (err) {
         console.error('Failed to load NFT metadata:', err)
@@ -115,7 +139,7 @@ export default function NftCard({ nft }) {
           <div className="relative w-full aspect-square">
             <Image
               src={imageUrl}
-              alt={`Kong #${nft.id}`}
+              alt={nft.title || `NFT #${nft.id}`}
               fill
               className="rounded object-contain"
               priority={nft.id <= 3}
@@ -124,7 +148,7 @@ export default function NftCard({ nft }) {
             />
           </div>
         )}
-        {showTooltip && metadata && (
+        {showTooltip && metadata && metadata.attributes?.length > 0 && (
           <Tooltip>
             <div className="p-2">
               <h4 className="font-bold mb-2">Attributes</h4>
@@ -137,22 +161,24 @@ export default function NftCard({ nft }) {
           </Tooltip>
         )}
       </div>
-      <h3 className="font-bold mt-2 text-foreground">Kong #{nft.id}</h3>
-      <div className="mt-2 flex flex-wrap gap-1">
-        {metadata?.attributes?.slice(0, 3).map(attr => (
-          <span 
-            key={attr.trait_type}
-            className="text-xs bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-muted-foreground"
-          >
-            {attr.trait_type}: {attr.value}
-          </span>
-        ))}
-        {metadata?.attributes?.length > 3 && (
-          <span className="text-xs bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-muted-foreground">
-            +{metadata.attributes.length - 3} more
-          </span>
-        )}
-      </div>
+      <h3 className="font-bold mt-2 text-foreground">{nft.title || `NFT #${nft.id}`}</h3>
+      {metadata?.attributes?.length > 0 && (
+        <div className="mt-2 flex flex-wrap gap-1">
+          {metadata.attributes.slice(0, 3).map(attr => (
+            <span 
+              key={attr.trait_type}
+              className="text-xs bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-muted-foreground"
+            >
+              {attr.trait_type}: {attr.value}
+            </span>
+          ))}
+          {metadata.attributes.length > 3 && (
+            <span className="text-xs bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-muted-foreground">
+              +{metadata.attributes.length - 3} more
+            </span>
+          )}
+        </div>
+      )}
     </div>
   )
 } 
