@@ -17,7 +17,7 @@ export const COLLECTIONS = [
   },
   {
     name: 'ZK Race',
-    contract: '0x123...', // Replace with actual contract
+    contract: '0x9d77cb4D8371736e2A2b2bfAa677b7841cDc8fC1',
     logo: '/collections/zk-race-logo.png',
     banner: '/collections/zk-race-banner.jpg',
     description: 'High-speed racing NFTs with ZK technology. Race, compete and earn rewards.',
