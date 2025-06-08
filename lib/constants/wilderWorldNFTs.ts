@@ -7,6 +7,7 @@ export interface WilderWorldNFT {
   mediaUrl: string;
   mediaType: 'video' | 'image';
   traits: Trait[];
+  imageUrl: string;
 }
 
 export const MANUAL_WILDER_WORLD: WilderWorldNFT[] = [
@@ -16,6 +17,7 @@ export const MANUAL_WILDER_WORLD: WilderWorldNFT[] = [
     "description": "Whevrolet",
     "mediaUrl": "/collections/wilder-world/36073522002736318236441335305922097439592256555061637376927927329956085869960.png",
     "mediaType": "image",
+    "imageUrl": "/collections/wilder-world/36073522002736318236441335305922097439592256555061637376927927329956085869960.png",
     "traits": [
       {
         "value": "Type 1",
@@ -81,6 +83,7 @@ export const MANUAL_WILDER_WORLD: WilderWorldNFT[] = [
     "description": "Wentley",
     "mediaUrl": "/collections/wilder-world/113652907629653379513608309898474441837064767872071027020241819776297838090715.png",
     "mediaType": "image",
+    "imageUrl": "/collections/wilder-world/113652907629653379513608309898474441837064767872071027020241819776297838090715.png",
     "traits": [
       {
         "value": "Type 1",
@@ -146,6 +149,7 @@ export const MANUAL_WILDER_WORLD: WilderWorldNFT[] = [
     "description": "Wonda",
     "mediaUrl": "/collections/wilder-world/37263806078148289478045292319502245359893571831903681984357324168914675299015.png",
     "mediaType": "image",
+    "imageUrl": "/collections/wilder-world/37263806078148289478045292319502245359893571831903681984357324168914675299015.png",
     "traits": [
       {
         "value": "Wonda WXW W 1992",
