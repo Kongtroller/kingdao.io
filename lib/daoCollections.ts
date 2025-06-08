@@ -41,7 +41,7 @@ export const COLLECTIONS = [
   },
   {
     name: 'DogePound',
-    contract: '0x123...', // Replace with actual contract
+    contract: '0xF4ee95274741437636e748DdAc70818B4ED7d043',
     logo: '/collections/doge-pound-logo.png',
     banner: '/collections/doge-pound-banner.jpg',
     description: 'The original DogePound NFT collection featuring unique dog-themed artwork and utility.',
