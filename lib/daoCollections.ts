@@ -33,7 +33,7 @@ export const COLLECTIONS = [
   },
   {
     name: 'Wilder World',
-    contract: '0x123...', // Replace with actual contract
+    contract: '0xc2e9678A71e50E5AEd036e00e9c5caeb1aC5987D',
     logo: '/collections/wilder-world-logo.png',
     banner: '/collections/wilder-world-banner.jpg',
     description: 'Immersive 5D Metaverse NFTs. Own and trade digital assets in a photorealistic universe.',
