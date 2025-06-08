@@ -7,6 +7,7 @@ import { useInView } from 'react-intersection-observer';
 import { ChevronDown, ChevronUp, Crown } from 'lucide-react';
 import { fetchSportsRollbots } from '@/services/sportsRollbotsService';
 import NFTCollectionView from '@/components/collections/NFTCollectionView';
+import { useCollectionStats } from '@/hooks/useCollectionStats';
 
 const ITEMS_PER_PAGE = 20;
 
@@ -27,6 +28,7 @@ export default function SportsRollbotsCollection() {
   const [isLoading, setIsLoading] = useState(true);
 
   const collection = COLLECTIONS.find(c => c.name === 'Sports Rollbots')!;
+  const { totalSupply, floorPrice } = useCollectionStats(collection);
   
   // Fetch NFTs
   useEffect(() => {
@@ -60,6 +62,8 @@ export default function SportsRollbotsCollection() {
         collection={collection}
         nfts={rollbots}
         showKingDaoBadge={true}
+        totalSupply={totalSupply}
+        floorPrice={floorPrice}
       />
     </CollectionLayout>
   );

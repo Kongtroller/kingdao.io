@@ -3,6 +3,7 @@ import CollectionLayout from '@/components/layouts/CollectionLayout';
 import { fetchDogePound } from '@/services/dogePoundService';
 import { useQuery } from '@tanstack/react-query';
 import NFTCollectionView from '@/components/collections/NFTCollectionView';
+import { useCollectionStats } from '@/hooks/useCollectionStats';
 
 export default function DogePoundCollection() {
   const { data: nft, isLoading, error } = useQuery({
@@ -12,6 +13,8 @@ export default function DogePoundCollection() {
 
   const collection = COLLECTIONS.find(c => c.name === 'DogePound');
   if (!collection) return null;
+
+  const { totalSupply, floorPrice } = useCollectionStats(collection);
 
   if (isLoading) {
     return (
@@ -39,6 +42,8 @@ export default function DogePoundCollection() {
         collection={collection}
         nfts={[nft]}
         showKingDaoBadge={true}
+        totalSupply={totalSupply}
+        floorPrice={floorPrice}
       />
     </CollectionLayout>
   );

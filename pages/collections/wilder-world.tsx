@@ -9,6 +9,7 @@ import { fetchWilderWorld } from '@/services/wilderWorldService';
 import { Trait } from '@/types/nft';
 import { useQuery } from '@tanstack/react-query';
 import NFTCollectionView from '@/components/collections/NFTCollectionView';
+import { useCollectionStats } from '@/hooks/useCollectionStats';
 
 const ITEMS_PER_PAGE = 20;
 
@@ -21,6 +22,7 @@ interface TraitStats {
 
 export default function WilderWorldCollection() {
   const collection = COLLECTIONS.find(c => c.name === 'Wilder World')!;
+  const { totalSupply, floorPrice } = useCollectionStats(collection);
 
   const { data: nfts, isLoading } = useQuery({
     queryKey: ['wilder-world-nfts'],
@@ -53,6 +55,8 @@ export default function WilderWorldCollection() {
         collection={collection}
         nfts={nfts}
         showKingDaoBadge={true}
+        totalSupply={totalSupply}
+        floorPrice={floorPrice}
       />
     </CollectionLayout>
   );

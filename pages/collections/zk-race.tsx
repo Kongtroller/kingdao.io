@@ -8,6 +8,7 @@ import { ChevronDown, ChevronUp, Crown } from 'lucide-react';
 import { fetchZKRace } from '@/services/zkRaceService';
 import { Trait } from '@/types/nft';
 import NFTCollectionView from '@/components/collections/NFTCollectionView';
+import { useCollectionStats } from '@/hooks/useCollectionStats';
 
 const ITEMS_PER_PAGE = 20;
 
@@ -23,6 +24,7 @@ export default function ZKRaceCollection() {
   const [isLoading, setIsLoading] = useState(true);
 
   const collection = COLLECTIONS.find(c => c.name === 'ZK Race')!;
+  const { totalSupply, floorPrice } = useCollectionStats(collection);
   
   // Fetch NFTs
   useEffect(() => {
@@ -56,6 +58,8 @@ export default function ZKRaceCollection() {
         collection={collection}
         nfts={racers}
         showKingDaoBadge={true}
+        totalSupply={totalSupply}
+        floorPrice={floorPrice}
       />
     </CollectionLayout>
   );

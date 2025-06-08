@@ -10,6 +10,7 @@ import { fetchKing } from '@/services/kingService';
 import { Trait } from '@/types/nft';
 import { useQuery } from '@tanstack/react-query';
 import NFTCollectionView from '@/components/collections/NFTCollectionView';
+import { useCollectionStats } from '@/hooks/useCollectionStats';
 
 const ITEMS_PER_PAGE = 20;
 
@@ -22,6 +23,7 @@ interface TraitStats {
 
 export default function KingCollection() {
   const collection = COLLECTIONS.find(c => c.name === 'KING')!;
+  const { totalSupply, floorPrice } = useCollectionStats(collection);
 
   const { data: nfts, isLoading } = useQuery({
     queryKey: ['king-nfts'],
@@ -54,6 +56,8 @@ export default function KingCollection() {
         collection={collection}
         nfts={nfts}
         showKingDaoBadge={true}
+        totalSupply={totalSupply}
+        floorPrice={floorPrice}
       />
     </CollectionLayout>
   );

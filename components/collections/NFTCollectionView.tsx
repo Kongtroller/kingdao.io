@@ -4,6 +4,9 @@ import { useInView } from 'react-intersection-observer';
 import { ChevronDown, ChevronUp, Crown } from 'lucide-react';
 import { Collection } from '@/lib/daoCollections';
 import { Trait } from '@/types/nft';
+import CollectionStats from './CollectionStats';
+import { getFloorPriceHistory } from '@/services/floorPriceService';
+import { useQuery } from '@tanstack/react-query';
 
 const ITEMS_PER_PAGE = 20;
 
@@ -26,9 +29,17 @@ interface NFTCollectionViewProps {
   collection: Collection;
   nfts: NFT[];
   showKingDaoBadge?: boolean;
+  totalSupply: number;
+  floorPrice?: number;
 }
 
-export default function NFTCollectionView({ collection, nfts, showKingDaoBadge = true }: NFTCollectionViewProps) {
+export default function NFTCollectionView({ 
+  collection, 
+  nfts, 
+  showKingDaoBadge = true,
+  totalSupply,
+  floorPrice 
+}: NFTCollectionViewProps) {
   const [view, setView] = useState<'grid' | 'list'>('grid');
   const [searchQuery, setSearchQuery] = useState('');
   const [displayedCount, setDisplayedCount] = useState(ITEMS_PER_PAGE);
@@ -36,6 +47,12 @@ export default function NFTCollectionView({ collection, nfts, showKingDaoBadge =
   const [isStatsExpanded, setIsStatsExpanded] = useState(false);
   const [expandedTraits, setExpandedTraits] = useState<{ [key: string]: boolean }>({});
   const { ref, inView } = useInView();
+
+  // Fetch floor price history
+  const { data: priceHistory } = useQuery({
+    queryKey: ['floorPriceHistory', collection.contract],
+    queryFn: () => getFloorPriceHistory(collection),
+  });
 
   // Calculate trait statistics
   useEffect(() => {
@@ -73,6 +90,14 @@ export default function NFTCollectionView({ collection, nfts, showKingDaoBadge =
 
   return (
     <>
+      {/* Collection Stats */}
+      <CollectionStats
+        totalSupply={totalSupply}
+        ownedCount={nfts.length}
+        floorPrice={floorPrice}
+        priceHistory={priceHistory}
+      />
+
       {/* Stats Section */}
       <div className="mb-8 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
         <button 
@@ -111,7 +136,7 @@ export default function NFTCollectionView({ collection, nfts, showKingDaoBadge =
       </div>
 
       {/* Controls */}
-      <div className="flex flex-col md:flex-row justify-between items-center mb-8">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
         <div className="text-sm text-gray-600 dark:text-gray-400 mb-4 md:mb-0">
           Showing {displayedNFTs.length} of {filteredNFTs.length} NFTs
         </div>
@@ -133,7 +158,7 @@ export default function NFTCollectionView({ collection, nfts, showKingDaoBadge =
       </div>
 
       {/* Collection Grid */}
-      <div className={`grid ${view === 'grid' ? 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4' : 'grid-cols-1'} gap-6`}>
+      <div className={`grid gap-6 ${view === 'grid' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' : 'grid-cols-1'}`}>
         {displayedNFTs.map((nft) => (
           <div 
             key={nft.tokenId}
@@ -165,7 +190,8 @@ export default function NFTCollectionView({ collection, nfts, showKingDaoBadge =
                 unoptimized
               />
             </div>
-            <div className={`p-4 ${view === 'list' ? 'flex-1' : ''}`}>
+            
+            <div className={view === 'grid' ? 'p-4' : 'flex-1'}>
               <h3 className="text-xl font-semibold">{nft.name}</h3>
               {nft.traits.length > 0 && (
                 <div className="mt-2">
