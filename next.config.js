@@ -1,6 +1,13 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  webpack: (config) => {
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@': __dirname,
+    };
+    return config;
+  },
   env: {
     NEXT_PUBLIC_RPC_URL: process.env.NEXT_PUBLIC_RPC_URL,
     NEXT_PUBLIC_CONTRACT_ADDRESS: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS,
@@ -21,11 +28,27 @@ const nextConfig = {
       'gateway.ipfs.io',
       'gateway.pinata.cloud',
       'cloudflare-ipfs.com',
-      'ipfs.infura.io'
+      'ipfs.infura.io',
+      'nft-cdn.alchemy.com',
+      'res.cloudinary.com'
     ],
     dangerouslyAllowSVG: true,
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
-  }
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '**',
+      },
+    ],
+  },
+  async rewrites() {
+    return [
+      {
+        source: '/api/:path*',
+        destination: 'http://localhost:3001/api/:path*',
+      },
+    ];
+  },
 }
 
 module.exports = nextConfig

@@ -1,13 +1,18 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 import { ethers } from 'ethers'
+import { useTheme } from 'next-themes'
 import NftCard from '../components/NftCard'
 import NftSkeleton from '../components/NftSkeleton'
 import ErrorBoundary from '../components/ErrorBoundary'
 import { useWeb3Init } from '../hooks/useWeb3Init'
 import PortfolioStats from '../components/PortfolioStats'
 import RecentTrades from '../components/RecentTrades'
+import TreasuryDashboard from '../components/TreasuryDashboard'
+import HistoricalPriceChart from '../components/HistoricalPriceChart'
+import DashboardLayout from '@/components/layouts/DashboardLayout'
 import config from '@/config/config'
+import { Sun, Moon } from 'lucide-react'
 
 import {
   useAccount,
@@ -15,9 +20,10 @@ import {
   useWalletClient,
 } from 'wagmi'
 
-const ITEMS_PER_PAGE = 6
+const ITEMS_PER_PAGE = 8
 
 export default function Dashboard() {
+  const { theme, setTheme } = useTheme()
   const { address: account, isConnected } = useAccount()
   const { data: walletClient } = useWalletClient()
   const publicClient = usePublicClient()
@@ -31,6 +37,23 @@ export default function Dashboard() {
   const [currentPage, setCurrentPage] = useState(1)
   const [isAuthorized, setIsAuthorized] = useState(false)
   const [checkingAuth, setCheckingAuth] = useState(true)
+  const [activeTab, setActiveTab] = useState('personal')
+
+  useEffect(() => {
+    if (router.pathname === '/dashboard/dao') {
+      setActiveTab('dao')
+    } else {
+      setActiveTab('personal')
+    }
+  }, [router.pathname])
+
+  const handleTabChange = (value) => {
+    if (value === 'dao') {
+      router.push('/dashboard/dao')
+    } else {
+      router.push('/dashboard')
+    }
+  }
 
   // Pagination
   const totalPages = Math.ceil((nfts || []).length / ITEMS_PER_PAGE)
@@ -129,94 +152,82 @@ export default function Dashboard() {
   // Show loading state while checking authorization
   if (checkingAuth) {
     return (
-      <div className="p-60 text-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
-        <p className="mt-2">Verifying NFT ownership...</p>
-      </div>
+      <DashboardLayout activeTab={activeTab} onTabChange={handleTabChange}>
+        <div className="p-60 text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
+          <p className="mt-2">Verifying NFT ownership...</p>
+        </div>
+      </DashboardLayout>
     )
   }
 
   // Show connect wallet message if not connected
   if (!isConnected) {
     return (
-      <div className="p-60 text-center">
-        <p>Please connect your wallet to view the dashboard</p>
-      </div>
+      <DashboardLayout activeTab={activeTab} onTabChange={handleTabChange}>
+        <div className="p-60 text-center">
+          <p>Please connect your wallet to view the dashboard</p>
+        </div>
+      </DashboardLayout>
     )
   }
 
   // Show unauthorized message if no NFTs owned
   if (!isAuthorized) {
     return (
-      <div className="p-60 text-center">
-        <h2 className="text-xl font-bold mb-4">Access Denied</h2>
-        <p>You need to own at least one Kong NFT to access the dashboard.</p>
-        <a 
-          href="https://blur.io/eth/collection/konginvestment" 
-          target="_blank" 
-          rel="noopener noreferrer"
-          className="text-blue-500 hover:text-blue-600 mt-4 inline-block"
-        >
-          Buy a Kong NFT on blur
-        </a>
-      </div>
+      <DashboardLayout activeTab={activeTab} onTabChange={handleTabChange}>
+        <div className="p-60 text-center">
+          <h2 className="text-xl font-bold mb-4">Access Denied</h2>
+          <p>You need to own at least one Kong NFT to access the dashboard.</p>
+          <a 
+            href="https://blur.io/eth/collection/konginvestment" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="text-blue-500 hover:text-blue-600 mt-4 inline-block"
+          >
+            Buy a Kong NFT on blur
+          </a>
+        </div>
+      </DashboardLayout>
     )
   }
 
   return (
-    <ErrorBoundary>
-      <div className="p-6 py-16 sm:py-24 max-w-6xl mx-auto">
-        <div className="grid gap-6">
-          <PortfolioStats nftCount={nfts.length} />
-          <RecentTrades />
-          <div className="grid gap-6 md:grid-cols-2">
-            {/* Portfolio Summary */}
-            <div className="bg-white p-6 rounded-lg shadow">
-              <h2 className="text-xl font-bold mb-4">Portfolio Summary</h2>
-              {isLoading ? (
-                <div className="animate-pulse">
-                  <div className="h-6 bg-gray-200 rounded w-3/4 mb-4"></div>
-                  <div className="h-6 bg-gray-200 rounded w-1/2"></div>
-                </div>
-              ) : (
-                <>
-                  <p className="text-lg">ETH Balance: {ethBalance} ETH</p>
-                  <p className="text-lg">Kong NFTs: {nfts?.length || 0}</p>
-                </>
-              )}
-            </div>
-
-            {/* NFT Gallery */}
-            <div className="bg-white p-6 rounded-lg shadow">
-              <h2 className="text-xl font-bold mb-4">Your Kong NFTs</h2>
-              <div className="grid gap-4 grid-cols-2">
-                {isLoading ? (
-                  Array(4).fill(0).map((_, i) => <NftSkeleton key={i} />)
-                ) : (
-                  paginatedNfts.map(nft => <NftCard key={nft.id} nft={nft} />)
-                )}
-              </div>
-              {totalPages > 1 && (
-                <div className="mt-4 flex justify-center gap-2">
-                  {Array(totalPages).fill(0).map((_, i) => (
-                    <button
-                      key={i}
-                      onClick={() => setCurrentPage(i + 1)}
-                      className={`px-3 py-1 rounded ${
-                        currentPage === i + 1
-                          ? 'bg-blue-500 text-white'
-                          : 'bg-gray-200'
-                      }`}
-                    >
-                      {i + 1}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+    <DashboardLayout activeTab={activeTab} onTabChange={handleTabChange}>
+      {activeTab === 'personal' ? (
+        <>
+          <PortfolioStats ethBalance={ethBalance} nfts={nfts} />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-8 auto-rows-auto">
+            {isLoading
+              ? Array(ITEMS_PER_PAGE)
+                  .fill(null)
+                  .map((_, i) => <NftSkeleton key={i} />)
+              : paginatedNfts.map((nft) => (
+                  <NftCard key={nft.id} nft={nft} />
+                ))}
           </div>
-        </div>
-      </div>
-    </ErrorBoundary>
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex justify-center mt-8">
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                <button
+                  key={page}
+                  onClick={() => setCurrentPage(page)}
+                  className={`mx-1 px-3 py-1 rounded ${
+                    currentPage === page
+                      ? 'bg-primary text-white'
+                      : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                  }`}
+                >
+                  {page}
+                </button>
+              ))}
+            </div>
+          )}
+        </>
+      ) : (
+        <TreasuryDashboard />
+      )}
+    </DashboardLayout>
   )
 }

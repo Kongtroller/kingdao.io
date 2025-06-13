@@ -1,4 +1,5 @@
 import { google } from 'googleapis'
+import { supabase } from '../utils/supabase'
 
 // Initialize Google Sheets API
 const sheets = google.sheets('v4')
@@ -33,42 +34,25 @@ export async function getSpreadsheetData(spreadsheetId, range) {
 }
 
 export async function getTreasuryData() {
-  const SPREADSHEET_ID = process.env.TREASURY_SPREADSHEET_ID
-  const RANGES = {
-    investments: 'Investments!A2:E',
-    expenses: 'Expenses!A2:D',
-    revenue: 'Revenue!A2:D'
-  }
-
   try {
-    const [investments, expenses, revenue] = await Promise.all([
-      getSpreadsheetData(SPREADSHEET_ID, RANGES.investments),
-      getSpreadsheetData(SPREADSHEET_ID, RANGES.expenses),
-      getSpreadsheetData(SPREADSHEET_ID, RANGES.revenue)
+    const [
+      { data: investments, error: investmentsError },
+      { data: expenses, error: expensesError },
+      { data: revenue, error: revenueError }
+    ] = await Promise.all([
+      supabase.from('investments').select('*').order('date', { ascending: false }),
+      supabase.from('expenses').select('*').order('date', { ascending: false }),
+      supabase.from('revenue').select('*').order('date', { ascending: false })
     ])
 
+    if (investmentsError) throw investmentsError
+    if (expensesError) throw expensesError
+    if (revenueError) throw revenueError
+
     return {
-      investments: investments?.map(row => ({
-        date: row[0],
-        asset: row[1],
-        amount: parseFloat(row[2]),
-        value: parseFloat(row[3]),
-        notes: row[4]
-      })) || [],
-      
-      expenses: expenses?.map(row => ({
-        date: row[0],
-        category: row[1],
-        amount: parseFloat(row[2]),
-        description: row[3]
-      })) || [],
-      
-      revenue: revenue?.map(row => ({
-        date: row[0],
-        source: row[1],
-        amount: parseFloat(row[2]),
-        notes: row[3]
-      })) || []
+      investments: investments || [],
+      expenses: expenses || [],
+      revenue: revenue || []
     }
   } catch (error) {
     console.error('Failed to fetch treasury data:', error)
